@@ -25,6 +25,36 @@ export async function checkNumberStatus(id, conn = false) {
     }
     const lid = await WAPI.getChat(id);
     if (lid) {
+      if (id.endsWith('@g.us')) {
+        return await WPP.group
+          .ensureGroup(lid.id)
+          .then((result) => {
+            if (!!result && typeof result === 'object') {
+              const data = {
+                status: 200,
+                numberExists: true,
+                id: result.id,
+              };
+              return data;
+            }
+            throw Object.assign(err, {
+              connection: connection,
+              numberExists: false,
+              text: `The number does not exist`
+            });
+          })
+          .catch((err) => {
+            if (err.text) {
+              throw err;
+            }
+            throw Object.assign(err, {
+              connection: connection,
+              numberExists: false,
+              text: err
+            });
+          });;
+      }
+
       return await WPP.contact
         .queryExists(lid.id)
         .then((result) => {
